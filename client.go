@@ -10,11 +10,13 @@ import (
 // Client.
 type Client struct {
 	http *http.Client
+	addr string
 }
 
 // Create new Client.
-func New() *Client {
+func New(addr string) *Client {
 	return &Client{
+		addr: addr,
 		http: &http.Client{},
 	}
 }
@@ -23,7 +25,7 @@ func New() *Client {
 func (c *Client) Call(method string, params, res interface{}) error {
 	buf, _ := json.EncodeClientRequest(method, params)
 	body := bytes.NewBuffer(buf)
-	r, _ := http.NewRequest("POST", "http://localhost:4000/", body)
+	r, _ := http.NewRequest("POST", c.addr, body)
 	r.Header.Set("Content-Type", "application/json")
 	resp, err := c.http.Do(r)
 

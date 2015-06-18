@@ -21,9 +21,9 @@ func NewClient(addr string) *Client {
 	}
 }
 
-// Call RPC method with params.
-func (c *Client) Call(method string, params, res interface{}) error {
-	buf, err := json.EncodeClientRequest(method, params)
+// Call RPC method with args.
+func (c *Client) Call(method string, args, res interface{}) error {
+	buf, err := json.EncodeClientRequest(method, args)
 	if err != nil {
 		return err
 	}

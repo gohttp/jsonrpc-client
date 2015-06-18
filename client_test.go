@@ -14,7 +14,7 @@ func init() {
 
 func TestCall(t *testing.T) {
 	var res map[string]interface{}
-	err := c.Call("Coupons.GetById", map[string]string{"id": "trial"}, &res)
+	err := c.Call("Coupon.GetById", map[string]string{"id": "trial"}, &res)
 	assert.Equal(t, nil, err)
 	assert.Equal(t, "trial", res["id"].(string))
 }

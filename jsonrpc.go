@@ -14,7 +14,7 @@ type Client struct {
 }
 
 // Create new Client.
-func New(addr string) *Client {
+func NewClient(addr string) *Client {
 	return &Client{
 		addr: addr,
 		http: &http.Client{},

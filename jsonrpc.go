@@ -37,11 +37,10 @@ func (c *Client) Call(method string, args, res interface{}) error {
 	r.Header.Set("Content-Type", "application/json")
 	resp, err := c.http.Do(r)
 
-	defer resp.Body.Close()
-
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	return json.DecodeClientResponse(resp.Body, res)
 }

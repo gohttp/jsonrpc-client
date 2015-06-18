@@ -2,6 +2,7 @@ package jsonrpc
 
 import (
 	"bytes"
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/rpc/json"
@@ -22,7 +23,7 @@ func NewClient(addr string) *Client {
 }
 
 // Call RPC method with args.
-func (c *Client) Call(method string, args, res interface{}) error {
+func (c *Client) Call(method string, args interface{}, res interface{}) error {
 	buf, err := json.EncodeClientRequest(method, args)
 	if err != nil {
 		return err
@@ -40,7 +41,16 @@ func (c *Client) Call(method string, args, res interface{}) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
 
-	return json.DecodeClientResponse(resp.Body, res)
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("received status code %d with status: %s", resp.StatusCode, resp.Status)
+	}
+
+	err = json.DecodeClientResponse(resp.Body, res)
+	if err != nil {
+		return err
+	}
+	resp.Body.Close()
+
+	return nil
 }

@@ -23,9 +23,17 @@ func New(addr string) *Client {
 
 // Call RPC method with params.
 func (c *Client) Call(method string, params, res interface{}) error {
-	buf, _ := json.EncodeClientRequest(method, params)
+	buf, err := json.EncodeClientRequest(method, params)
+	if err != nil {
+		return err
+	}
+
 	body := bytes.NewBuffer(buf)
-	r, _ := http.NewRequest("POST", c.addr, body)
+
+	r, err := http.NewRequest("POST", c.addr, body)
+	if err != nil {
+		return err
+	}
 	r.Header.Set("Content-Type", "application/json")
 	resp, err := c.http.Do(r)
 

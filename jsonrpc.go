@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/segmentio/gorilla-rpc/json"
+	"github.com/gohttp/rpc/json"
 )
 
 // Client.

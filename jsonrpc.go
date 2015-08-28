@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gohttp/rpc/json"
 )
@@ -18,7 +19,9 @@ type Client struct {
 func NewClient(addr string) *Client {
 	return &Client{
 		addr: addr,
-		http: &http.Client{},
+		http: &http.Client{
+			Timeout: 60 * time.Second,
+		},
 	}
 }
 
@@ -35,12 +38,13 @@ func (c *Client) Call(method string, args interface{}, res interface{}) error {
 	if err != nil {
 		return err
 	}
+
 	r.Header.Set("Content-Type", "application/json")
 	resp, err := c.http.Do(r)
-
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode >= 400 {
 		return fmt.Errorf("received status code %d with status: %s", resp.StatusCode, resp.Status)
@@ -50,7 +54,6 @@ func (c *Client) Call(method string, args interface{}, res interface{}) error {
 	if err != nil {
 		return err
 	}
-	resp.Body.Close()
 
 	return nil
 }

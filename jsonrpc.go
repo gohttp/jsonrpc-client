@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/abursavich/nett"
 	"github.com/gohttp/rpc/json"
 )
 
@@ -17,9 +18,16 @@ type Client struct {
 
 // Create new Client.
 func NewClient(addr string) *Client {
+	dialer := &nett.Dialer{
+		Resolver: &nett.CacheResolver{TTL: 5 * time.Minute},
+		Timeout:  1 * time.Minute,
+	}
 	return &Client{
 		addr: addr,
 		http: &http.Client{
+			Transport: &http.Transport{
+				Dial: dialer.Dial,
+			},
 			Timeout: 10 * time.Minute,
 		},
 	}

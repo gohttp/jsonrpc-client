@@ -11,18 +11,17 @@ import (
 )
 
 // Client.
-type Client struct {
-	http *http.Client
-	addr string
+type Client interface {
+	Call(method string, args interface{}, res interface{}) error
 }
 
 // Create new Client.
-func NewClient(addr string) *Client {
+func NewClient(addr string) Client {
 	dialer := &nett.Dialer{
 		Resolver: &nett.CacheResolver{TTL: 5 * time.Minute},
 		Timeout:  1 * time.Minute,
 	}
-	return &Client{
+	return &client{
 		addr: addr,
 		http: &http.Client{
 			Transport: &http.Transport{
@@ -33,8 +32,13 @@ func NewClient(addr string) *Client {
 	}
 }
 
+type client struct {
+	http *http.Client
+	addr string
+}
+
 // Call RPC method with args.
-func (c *Client) Call(method string, args interface{}, res interface{}) error {
+func (c *client) Call(method string, args interface{}, res interface{}) error {
 	buf, err := json.EncodeClientRequest(method, args)
 	if err != nil {
 		return err

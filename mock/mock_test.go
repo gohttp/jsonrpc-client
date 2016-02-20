@@ -20,7 +20,7 @@ func TestMockResponse(t *testing.T) {
 	c.AssertExpectations(t)
 }
 
-func TestMock(t *testing.T) {
+func TestMockError(t *testing.T) {
 	c := NewClient()
 
 	c.MockError("RPC.Test", "hello", errors.New("somebody set up the bomb"))

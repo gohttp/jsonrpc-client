@@ -3,6 +3,8 @@ package jsonrpc
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -18,14 +20,16 @@ type Client interface {
 // Create new Client.
 func NewClient(addr string) Client {
 	dialer := &nett.Dialer{
-		Resolver: &nett.CacheResolver{TTL: 5 * time.Minute},
-		Timeout:  1 * time.Minute,
+		Resolver:  &nett.CacheResolver{TTL: 5 * time.Minute},
+		Timeout:   1 * time.Minute,
+		KeepAlive: 1 * time.Minute,
 	}
 	return &client{
 		addr: addr,
 		http: &http.Client{
 			Transport: &http.Transport{
-				Dial: dialer.Dial,
+				Dial:                dialer.Dial,
+				MaxIdleConnsPerHost: 512,
 			},
 			Timeout: 10 * time.Minute,
 		},
@@ -56,7 +60,10 @@ func (c *client) Call(method string, args interface{}, res interface{}) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		io.Copy(ioutil.Discard, resp.Body)
+		resp.Body.Close()
+	}()
 
 	if resp.StatusCode >= 400 {
 		return fmt.Errorf("received status code %d with status: %s", resp.StatusCode, resp.Status)

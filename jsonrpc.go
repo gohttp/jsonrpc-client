@@ -6,33 +6,17 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"time"
 
-	"github.com/abursavich/nett"
 	"github.com/gohttp/rpc/json"
 )
 
-// Client.
 type Client interface {
 	Call(method string, args interface{}, res interface{}) error
 }
 
-// Create new Client.
 func NewClient(addr string) Client {
-	dialer := &nett.Dialer{
-		Resolver:  &nett.CacheResolver{TTL: 5 * time.Minute},
-		Timeout:   1 * time.Minute,
-		KeepAlive: 1 * time.Minute,
-	}
 	return &client{
 		addr: addr,
-		http: &http.Client{
-			Transport: &http.Transport{
-				Dial:                dialer.Dial,
-				MaxIdleConnsPerHost: 512,
-			},
-			Timeout: 10 * time.Minute,
-		},
 	}
 }
 
@@ -41,7 +25,8 @@ type client struct {
 	addr string
 }
 
-// Call RPC method with args.
+// Call invokes the RPC method with the given arguments and stores the result
+// in the value pointed by `res`.
 func (c *client) Call(method string, args interface{}, res interface{}) error {
 	buf, err := json.EncodeClientRequest(method, args)
 	if err != nil {
@@ -54,8 +39,12 @@ func (c *client) Call(method string, args interface{}, res interface{}) error {
 	if err != nil {
 		return err
 	}
-
 	r.Header.Set("Content-Type", "application/json")
+
+	if c.http == nil {
+		c.http = http.DefaultClient
+	}
+
 	resp, err := c.http.Do(r)
 	if err != nil {
 		return err

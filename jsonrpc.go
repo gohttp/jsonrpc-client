@@ -14,7 +14,6 @@ import (
 	rpcjson "github.com/gohttp/rpc/json"
 )
 
-// Client.
 type Client interface {
 	Call(method string, args interface{}, res interface{}) error
 	CallContext(context.Context, string, interface{}, interface{}) error
@@ -45,7 +44,9 @@ type client struct {
 	addr string
 }
 
-// Call calls the given RPC method with the given arguments.
+// CallContext calls the given RPC method with the given arguments. args is
+// serialized to JSON before sending to the remote server. The response is
+// decoded into res.
 func (c *client) Call(method string, args interface{}, res interface{}) error {
 	return c.CallContext(context.Background(), method, args, res)
 }
@@ -68,6 +69,11 @@ func (c *client) CallContext(ctx context.Context, method string, args interface{
 	r = r.WithContext(ctx)
 
 	r.Header.Set("Content-Type", "application/json")
+
+	if c.http == nil {
+		c.http = http.DefaultClient
+	}
+
 	resp, err := c.http.Do(r)
 	if err != nil {
 		return err

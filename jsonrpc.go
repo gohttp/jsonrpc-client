@@ -2,6 +2,7 @@ package jsonrpc
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -9,7 +10,7 @@ import (
 	"time"
 
 	"github.com/abursavich/nett"
-	"github.com/gohttp/rpc/json"
+	rpcjson "github.com/gohttp/rpc/json"
 )
 
 // Client.
@@ -43,7 +44,7 @@ type client struct {
 
 // Call RPC method with args.
 func (c *client) Call(method string, args interface{}, res interface{}) error {
-	buf, err := json.EncodeClientRequest(method, args)
+	buf, err := rpcjson.EncodeClientRequest(method, args)
 	if err != nil {
 		return err
 	}
@@ -66,10 +67,18 @@ func (c *client) Call(method string, args interface{}, res interface{}) error {
 	}()
 
 	if resp.StatusCode >= 400 {
-		return fmt.Errorf("received status code %d with status: %s", resp.StatusCode, resp.Status)
+		var e struct {
+			Error string `json:"error"`
+		}
+
+		if err = json.NewDecoder(resp.Body).Decode(&e); err != nil {
+			return fmt.Errorf("jsonrpc: received non json response, with status %d", resp.StatusCode)
+		}
+
+		return fmt.Errorf("jsonrpc: %s", e.Error)
 	}
 
-	err = json.DecodeClientResponse(resp.Body, res)
+	err = rpcjson.DecodeClientResponse(resp.Body, res)
 	if err != nil {
 		return err
 	}

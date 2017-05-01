@@ -1,6 +1,7 @@
 package rpcmock
 
 import (
+	"context"
 	"reflect"
 
 	"github.com/stretchr/testify/mock"
@@ -18,6 +19,17 @@ func NewClient() *Client {
 func (c *Client) Call(method string, params, result interface{}) error {
 	args := c.Called(method, params, result)
 	return args.Error(0)
+}
+
+func (c *Client) CallContext(ctx context.Context, method string, params, result interface{}) error {
+	// Reverse order here, since we shouldn't be hitting the network during this
+	// test.
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+	return c.Call(method, params, result)
 }
 
 func (c *Client) MockResponse(method string, params, response interface{}) {

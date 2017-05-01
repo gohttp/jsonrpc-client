@@ -2,6 +2,7 @@ package jsonrpc
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,9 +17,11 @@ import (
 // Client.
 type Client interface {
 	Call(method string, args interface{}, res interface{}) error
+	CallContext(context.Context, string, interface{}, interface{}) error
 }
 
-// Create new Client.
+// NewClient creates a new Client that caches DNS responses for 5 minutes, and
+// times out RPC requests after 10 minutes each.
 func NewClient(addr string) Client {
 	dialer := &nett.Dialer{
 		Resolver:  &nett.CacheResolver{TTL: 5 * time.Minute},
@@ -42,8 +45,15 @@ type client struct {
 	addr string
 }
 
-// Call RPC method with args.
+// Call calls the given RPC method with the given arguments.
 func (c *client) Call(method string, args interface{}, res interface{}) error {
+	return c.CallContext(context.Background(), method, args, res)
+}
+
+// CallContext calls the given RPC method with the given arguments. args is
+// serialized to JSON before sending to the remote server. The response is
+// decoded into res.
+func (c *client) CallContext(ctx context.Context, method string, args interface{}, res interface{}) error {
 	buf, err := rpcjson.EncodeClientRequest(method, args)
 	if err != nil {
 		return err
@@ -55,6 +65,7 @@ func (c *client) Call(method string, args interface{}, res interface{}) error {
 	if err != nil {
 		return err
 	}
+	r = r.WithContext(ctx)
 
 	r.Header.Set("Content-Type", "application/json")
 	resp, err := c.http.Do(r)
@@ -78,10 +89,5 @@ func (c *client) Call(method string, args interface{}, res interface{}) error {
 		return fmt.Errorf("jsonrpc: %s", e.Error)
 	}
 
-	err = rpcjson.DecodeClientResponse(resp.Body, res)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return rpcjson.DecodeClientResponse(resp.Body, res)
 }

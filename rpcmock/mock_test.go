@@ -1,6 +1,7 @@
 package rpcmock
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -31,4 +32,12 @@ func TestMock(t *testing.T) {
 	assert.Equal(t, "", response)
 	assert.Equal(t, errors.New("somebody set up the bomb"), err)
 	c.AssertExpectations(t)
+}
+
+func TestCallContextError(t *testing.T) {
+	c := NewClient()
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	err := c.CallContext(ctx, "RPC.Test", "hello", nil)
+	assert.Equal(t, err, context.Canceled)
 }

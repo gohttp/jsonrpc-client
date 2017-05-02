@@ -68,7 +68,9 @@ func (c *client) CallContext(ctx context.Context, method string, args interface{
 	}
 	r = r.WithContext(ctx)
 
-	r.Header.Set("Content-Type", "application/json")
+	r.Header.Set("Content-Type", "application/json; charset=utf-8")
+	r.Header.Set("Accept", "application/json")
+	r.Header.Set("Accept-Charset", "utf-8")
 
 	if c.http == nil {
 		c.http = http.DefaultClient

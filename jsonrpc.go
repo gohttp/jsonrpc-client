@@ -40,8 +40,9 @@ func NewClient(addr string) Client {
 }
 
 type client struct {
-	http *http.Client
-	addr string
+	http      *http.Client
+	addr      string
+	userAgent string
 }
 
 // CallContext calls the given RPC method with the given arguments. args is
@@ -71,6 +72,10 @@ func (c *client) CallContext(ctx context.Context, method string, args interface{
 	r.Header.Set("Content-Type", "application/json; charset=utf-8")
 	r.Header.Set("Accept", "application/json")
 	r.Header.Set("Accept-Charset", "utf-8")
+
+	if c.userAgent != "" {
+		r.Header.Set("User-Agent", c.userAgent)
+	}
 
 	if c.http == nil {
 		c.http = http.DefaultClient

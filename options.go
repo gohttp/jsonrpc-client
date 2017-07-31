@@ -37,3 +37,10 @@ func RoundTripper(rt http.RoundTripper) optionFunc {
 		return nil
 	})
 }
+
+func UserAgent(userAgent string) optionFunc {
+	return optionFunc(func(c *client) error {
+		c.userAgent = userAgent
+		return nil
+	})
+}

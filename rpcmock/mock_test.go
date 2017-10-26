@@ -12,12 +12,20 @@ func TestMockResponse(t *testing.T) {
 	c := NewClient()
 
 	c.MockResponse("RPC.Test", "hello", "world")
+	c.MockResponse("RPC.Test2", "bye", "world")
 
+{
 	var response string
 	err := c.Call("RPC.Test", "hello", &response)
-
 	assert.Equal(t, "world", response)
 	assert.Equal(t, nil, err)
+}
+{
+	var response string
+	err := c.Call("RPC.Test2", "bye", &response)
+	assert.Equal(t, "world", response)
+	assert.Equal(t, nil, err)
+}
 	c.AssertExpectations(t)
 }
 
